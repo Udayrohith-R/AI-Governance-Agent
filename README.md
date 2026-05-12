@@ -21,7 +21,8 @@ Instead of simple text moderation, Audit-Core intercepts complex "Execution Payl
 * **Architecture Concept:** Designed to integrate with VIA's **LobsterTrap** deep prompt inspection proxy to form a complete "Trust Layer" for multi-agent permission frameworks.
 
 ### Live Demo
-[Insert your Vercel Link Here]
+Link:https://ai-governance-agent-arthimic.vercel.app/
+
 
 ### How to Run Locally
 1. Clone the repository: 
