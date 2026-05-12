@@ -1,0 +1,6 @@
+{
+  "name": "Enterprise AI Governance Agent",
+  "description": "An EU AI Act compliance evaluation interface that audits proposed actions from primary reasoning agents.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
