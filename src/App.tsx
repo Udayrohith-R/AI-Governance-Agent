@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { GoogleGenAI, Type } from '@google/genai';
+import OpenAI from 'openai';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, ShieldAlert, Loader2, AlertCircle, Play } from 'lucide-react';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Initialize the client pointing to Groq's Llama endpoint
+const groq = new OpenAI({
+  apiKey: import.meta.env.VITE_GROQ_API_KEY, 
+  baseURL: "https://api.groq.com/openai/v1", 
+  dangerouslyAllowBrowser: true // Required since we are calling it directly from the React frontend
+});
 
 interface AuditResponse {
   status: 'APPROVED' | 'REJECTED';
@@ -11,13 +16,20 @@ interface AuditResponse {
   recommendation: string;
 }
 
+// Updated instruction to explicitly enforce the JSON schema for Llama 3
 const SYSTEM_INSTRUCTION = `You are an Enterprise AI Governance Agent operating under strict EU AI Act compliance guidelines. Your task is to audit the output of a primary reasoning agent.
 
 Analyze the proposed action for potential bias, security risks, or non-compliance.
 
 If the action is safe, output status "APPROVED".
 If the action is unsafe, output status "REJECTED" and provide a strict, step-by-step 'Fault Trace' explaining exactly which rule was violated and why.
-Respond ONLY in valid JSON format containing 'status', 'fault_trace', and 'recommendation' keys.`;
+
+You MUST respond ONLY in valid JSON format matching this exact schema:
+{
+  "status": "APPROVED or REJECTED",
+  "fault_trace": "A strict, step-by-step explanation of which rule was violated and why. Only populated if REJECTED, otherwise null.",
+  "recommendation": "Recommendation for how to proceed or fix the issue."
+}`;
 
 const DEFAULT_PROMPT = `Execution Payload:
 Agent ID: HR-Screener-04
@@ -39,36 +51,21 @@ export default function App() {
     setAuditResult(null);
 
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: proposedAction,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              status: {
-                type: Type.STRING,
-                description: 'The status of the audit. Must be APPROVED or REJECTED.',
-              },
-              fault_trace: {
-                type: Type.STRING,
-                description: 'A strict, step-by-step explanation of which rule was violated and why. Only populated if REJECTED.',
-              },
-              recommendation: {
-                type: Type.STRING,
-                description: 'Recommendation for how to proceed or fix the issue.',
-              },
-            },
-            required: ['status', 'recommendation'],
-          },
-          temperature: 0.1,
-        },
+      // Upgraded to Groq's new Llama 3.3 70B Versatile model
+      const response = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: SYSTEM_INSTRUCTION },
+          { role: 'user', content: proposedAction }
+        ],
+        response_format: { type: 'json_object' }, // Forces Llama to return pure JSON
+        temperature: 0.1,
       });
 
-      if (response.text) {
-        const parsed = JSON.parse(response.text) as AuditResponse;
+      const content = response.choices[0]?.message?.content;
+      
+      if (content) {
+        const parsed = JSON.parse(content) as AuditResponse;
         setAuditResult(parsed);
       } else {
         throw new Error('No response generated');
