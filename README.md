@@ -1,6 +1,6 @@
 # Audit-Core V2.1: Enterprise AI Governance Agent
 
-**Track 1: Agent Security & AI Governance (VIA)** | *Built for the Transforming Enterprise Through AI Hackathon*
+**Track 1: Agent Security & AI Governance (VIA)** | *Built for the Transforming Enterprise Through AI Hackathon with Google DeepMind*
 
 ### The Problem
 Enterprises are racing to deploy multi-agent systems, but lack the observability required to do so safely. When an autonomous agent makes a biased decision or hallucinates a non-compliant workflow, companies face massive regulatory liability under frameworks like the **EU AI Act** and **GDPR**. Industry guardrails haven't kept up with agentic autonomy.
